@@ -1,4 +1,4 @@
-﻿# Author: NIRAJ KR YADAV
+# Author: NIRAJ KR YADAV
 # Email: Nirajyadav9466@gmail.com
 # Phone: 7366913096
 
@@ -16,7 +16,7 @@ permissions:
 jobs:
   quality-security:
     name: Quality and Security Gates
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -75,7 +75,7 @@ jobs:
 
   terraform-plan:
     name: Authenticated Terraform Plan Gate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: quality-security
     if: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main') }}
     permissions:
@@ -120,5 +120,6 @@ jobs:
       - name: Terraform plan
         working-directory: terraform
         run: terraform plan -input=false -lock=false
+
 
 
