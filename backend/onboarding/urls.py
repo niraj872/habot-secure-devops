@@ -3,6 +3,7 @@
 # Phone: 7366913096
 
 from django.urls import path
+
 from .views import StudentOnboardingCreateView
 
 urlpatterns = [

@@ -3,6 +3,7 @@
 # Phone: 7366913096
 
 from rest_framework import generics
+
 from .models import StudentOnboarding
 from .serializers import StudentOnboardingSerializer
 

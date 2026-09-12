@@ -3,6 +3,7 @@
 # Phone: 7366913096
 
 from django.test import TestCase
+
 from .dcyn import Decision, evaluate_onboarding
 from .serializers import StudentOnboardingSerializer
 
