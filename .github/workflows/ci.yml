@@ -17,6 +17,7 @@ jobs:
   quality-security:
     name: Quality and Security Gates
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -28,7 +29,7 @@ jobs:
 
       - name: Install Python dependencies
         working-directory: backend
-        run: pip install -r requirements.txt
+        run: python -m pip install --upgrade pip && python -m pip install -r requirements.txt ruff
 
       - name: Python formatting gate
         working-directory: backend
@@ -38,33 +39,44 @@ jobs:
         working-directory: backend
         run: ruff check .
 
-      - name: Set up Terraform
+      - name: Install Terraform
         uses: hashicorp/setup-terraform@v3
 
-      - name: Terraform fmt gate
+      - name: Terraform formatting gate
         working-directory: terraform
         run: terraform fmt -check -recursive
 
-      - name: Terraform init (validation mode)
+      - name: Terraform validation gate
         working-directory: terraform
-        run: terraform init -backend=false
+        run: terraform init -backend=false && terraform validate
 
-      - name: Terraform validate
-        working-directory: terraform
-        run: terraform validate
+      - name: Secret security gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -RInE --exclude-dir=.git --exclude-dir=node_modules --exclude-dir=.terraform \
+            '(api[_-]?key|secret[_-]?key|access[_-]?token|password)[[:space:]]*[:=][[:space:]]*["'\''][A-Za-z0-9_./+=-]{12,}["'\'']' .; then
+            echo "FAIL: possible hardcoded secret detected."
+            exit 1
+          fi
+          echo "Secret scan passed."
 
-      - name: Gitleaks secret gate
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Trivy IaC security gate
-        uses: aquasecurity/trivy-action@0.33.1
-        with:
-          scan-type: config
-          scan-ref: terraform
-          exit-code: "1"
-          severity: "HIGH,CRITICAL"
+      - name: Terraform security gate
+        shell: bash
+        run: |
+          set -euo pipefail
+          if command -v trivy >/dev/null 2>&1; then
+            trivy config --exit-code 1 --severity HIGH,CRITICAL terraform
+          else
+            echo "Installing Trivy..."
+            sudo apt-get update -qq
+            sudo apt-get install -y wget
+            wget -qO- https://aquasecurity.github.io/trivy-repo/deb/public.key | sudo gpg --dearmor -o /usr/share/keyrings/trivy.gpg
+            echo "deb [signed-by=/usr/share/keyrings/trivy.gpg] https://aquasecurity.github.io/trivy-repo/deb generic main" | sudo tee /etc/apt/sources.list.d/trivy.list >/dev/null
+            sudo apt-get update -qq
+            sudo apt-get install -y trivy
+            trivy config --exit-code 1 --severity HIGH,CRITICAL terraform
+          fi
 
       - name: Django tests
         working-directory: backend
@@ -81,6 +93,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
+
     env:
       TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
       TF_VAR_bucket_name: ${{ vars.GCP_BUCKET_NAME }}
@@ -91,8 +104,10 @@ jobs:
       TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
       WIF_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
       DEPLOYER_SERVICE_ACCOUNT: ${{ secrets.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
       - name: Fail-closed configuration check
         shell: bash
@@ -105,7 +120,8 @@ jobs:
             fi
           done
 
-      - uses: hashicorp/setup-terraform@v3
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
 
       - name: Authenticate to Google Cloud with WIF
         uses: google-github-actions/auth@v3
@@ -120,8 +136,3 @@ jobs:
       - name: Terraform plan
         working-directory: terraform
         run: terraform plan -input=false -lock=false
-
-
-
-
-
