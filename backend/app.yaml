@@ -1,0 +1,17 @@
+﻿# Author: NIRAJ KR YADAV
+# Email: Nirajyadav9466@gmail.com
+# Phone: 7366913096
+
+runtime: python312
+service: default
+entrypoint: gunicorn -b :$PORT habot_project.wsgi:application
+
+handlers:
+  - url: /.*
+    script: auto
+    secure: always
+
+env_variables:
+  DJANGO_DEBUG: "false"
+
+

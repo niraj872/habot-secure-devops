@@ -1,0 +1,10 @@
+title = "Habot DevOps Gitleaks Configuration"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API key pattern"
+regex = '''(?i)(api[_-]?key|api[_-]?secret|access[_-]?token)\s*[:=]\s*["'][A-Za-z0-9_\-]{20,}["']'''
+tags = ["key", "API", "secret"]

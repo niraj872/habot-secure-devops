@@ -1,0 +1,111 @@
+﻿# Author: NIRAJ KR YADAV
+# Email: Nirajyadav9466@gmail.com
+# Phone: 7366913096
+
+name: Gated Terraform Deployment
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: "Type DEPLOY to approve the deployment"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  deploy:
+    name: Re-run Gates and Apply
+    if: ${{ github.event.inputs.confirm == 'DEPLOY' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      TF_VAR_project_id: ${{ vars.GCP_PROJECT_ID }}
+      TF_VAR_bucket_name: ${{ vars.GCP_BUCKET_NAME }}
+      TF_VAR_analytics_group: ${{ vars.GCP_ANALYTICS_GROUP }}
+      TF_VAR_region: ${{ vars.GCP_REGION || 'asia-south2' }}
+      TF_VAR_data_region: ${{ vars.GCP_DATA_REGION || 'IN-NCR' }}
+      TF_VAR_github_repository: ${{ github.repository }}
+      TF_STATE_BUCKET: ${{ vars.TF_STATE_BUCKET }}
+      WIF_PROVIDER: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+      DEPLOYER_SERVICE_ACCOUNT: ${{ secrets.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail-closed configuration check
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in TF_VAR_project_id TF_VAR_bucket_name TF_VAR_analytics_group TF_STATE_BUCKET WIF_PROVIDER DEPLOYER_SERVICE_ACCOUNT; do
+            if [ -z "${!name:-}" ]; then
+              echo "Missing required deployment configuration: ${name}"
+              exit 1
+            fi
+          done
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Python dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt
+      - name: Python format gate
+        working-directory: backend
+        run: ruff format --check .
+      - name: Python lint gate
+        working-directory: backend
+        run: ruff check .
+
+      - uses: hashicorp/setup-terraform@v3
+      - name: Terraform format gate
+        working-directory: terraform
+        run: terraform fmt -check -recursive
+      - name: Terraform init validation
+        working-directory: terraform
+        run: terraform init -backend=false
+      - name: Terraform validate
+        working-directory: terraform
+        run: terraform validate
+
+      - name: Gitleaks gate
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Trivy IaC gate
+        uses: aquasecurity/trivy-action@0.33.1
+        with:
+          scan-type: config
+          scan-ref: terraform
+          exit-code: "1"
+          severity: "HIGH,CRITICAL"
+
+      - name: Django tests
+        working-directory: backend
+        run: python manage.py test
+
+      - name: JSON schema test
+        run: python tests/test_schema.py
+
+      - name: Authenticate to Google Cloud with WIF
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ env.WIF_PROVIDER }}
+          service_account: ${{ env.DEPLOYER_SERVICE_ACCOUNT }}
+
+      - name: Terraform init with remote state
+        working-directory: terraform
+        run: terraform init -input=false -backend-config="bucket=${TF_STATE_BUCKET}" -backend-config="prefix=habot/devops"
+
+      - name: Terraform plan
+        working-directory: terraform
+        run: terraform plan -input=false -lock=false -out=tfplan
+
+      - name: Terraform apply
+        working-directory: terraform
+        run: terraform apply -input=false tfplan
+
+
