@@ -1,12 +1,14 @@
-﻿# Author: NIRAJ KR YADAV
+# Author: NIRAJ KR YADAV
 # Email: Nirajyadav9466@gmail.com
 # Phone: 7366913096
 
 from enum import Enum
 
+
 class Decision(str, Enum):
     ACCEPT = "ACCEPT"
     REJECT = "REJECT"
+
 
 YES_NO_FIELDS = (
     "has_learning_difficulty",
@@ -14,10 +16,12 @@ YES_NO_FIELDS = (
     "consent_given",
 )
 
+
 def to_yes_no(value: bool) -> str:
     if type(value) is not bool:
         raise ValueError("DCYN accepts only Boolean values.")
     return "YES" if value else "NO"
+
 
 def evaluate_onboarding(payload: dict) -> dict:
     missing = [field for field in YES_NO_FIELDS if field not in payload]
@@ -47,5 +51,3 @@ def evaluate_onboarding(payload: dict) -> dict:
         "reason": "Required deterministic onboarding rules passed.",
         "answers": {field: to_yes_no(payload[field]) for field in YES_NO_FIELDS},
     }
-
-

@@ -1,4 +1,4 @@
-﻿# Author: NIRAJ KR YADAV
+# Author: NIRAJ KR YADAV
 # Email: Nirajyadav9466@gmail.com
 # Phone: 7366913096
 
@@ -11,7 +11,11 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # The fallback is intentionally non-secret and only exists so local tests can run.
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "local-development-key")
 DEBUG = os.getenv("DJANGO_DEBUG", "false").lower() == "true"
-ALLOWED_HOSTS = [h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",") if h.strip()]
+ALLOWED_HOSTS = [
+    h.strip()
+    for h in os.getenv("DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+    if h.strip()
+]
 
 INSTALLED_APPS = [
     "django.contrib.auth",
@@ -50,5 +54,3 @@ CORS_ALLOWED_ORIGINS = [
 
 
 CORS_ALLOW_ALL_ORIGINS = True
-
-

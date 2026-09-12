@@ -1,4 +1,4 @@
-﻿# Author: NIRAJ KR YADAV
+# Author: NIRAJ KR YADAV
 # Email: Nirajyadav9466@gmail.com
 # Phone: 7366913096
 
@@ -18,7 +18,6 @@ VALID = {
 
 
 class StudentOnboardingTests(TestCase):
-
     def test_valid_payload(self):
         serializer = StudentOnboardingSerializer(data=VALID)
         self.assertTrue(serializer.is_valid(), serializer.errors)
@@ -30,33 +29,23 @@ class StudentOnboardingTests(TestCase):
         self.assertFalse(serializer.is_valid())
 
     def test_empty_name(self):
-        serializer = StudentOnboardingSerializer(
-            data={**VALID, "student_name": "   "}
-        )
+        serializer = StudentOnboardingSerializer(data={**VALID, "student_name": "   "})
         self.assertFalse(serializer.is_valid())
 
     def test_invalid_type(self):
-        serializer = StudentOnboardingSerializer(
-            data={**VALID, "age": "twelve"}
-        )
+        serializer = StudentOnboardingSerializer(data={**VALID, "age": "twelve"})
         self.assertFalse(serializer.is_valid())
 
     def test_out_of_range_age(self):
-        serializer = StudentOnboardingSerializer(
-            data={**VALID, "age": 150}
-        )
+        serializer = StudentOnboardingSerializer(data={**VALID, "age": 150})
         self.assertFalse(serializer.is_valid())
 
     def test_invalid_yes_no_value(self):
-        serializer = StudentOnboardingSerializer(
-            data={**VALID, "consent_given": "YES"}
-        )
+        serializer = StudentOnboardingSerializer(data={**VALID, "consent_given": "YES"})
         self.assertFalse(serializer.is_valid())
 
     def test_consent_rejected(self):
-        serializer = StudentOnboardingSerializer(
-            data={**VALID, "consent_given": False}
-        )
+        serializer = StudentOnboardingSerializer(data={**VALID, "consent_given": False})
         self.assertFalse(serializer.is_valid())
 
     def test_dcyn_accepts_valid_payload(self):
@@ -68,5 +57,3 @@ class StudentOnboardingTests(TestCase):
         payload.pop("consent_given")
         result = evaluate_onboarding(payload)
         self.assertEqual(result["decision"], Decision.REJECT.value)
-
-

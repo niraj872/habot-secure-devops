@@ -1,8 +1,9 @@
-﻿# Author: NIRAJ KR YADAV
+# Author: NIRAJ KR YADAV
 # Email: Nirajyadav9466@gmail.com
 # Phone: 7366913096
 
 from django.db import models
+
 
 class StudentOnboarding(models.Model):
     student_id = models.CharField(max_length=64, unique=True)
@@ -16,5 +17,3 @@ class StudentOnboarding(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
-
-

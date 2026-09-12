@@ -1,4 +1,4 @@
-﻿# Author: NIRAJ KR YADAV
+# Author: NIRAJ KR YADAV
 # Email: Nirajyadav9466@gmail.com
 # Phone: 7366913096
 
@@ -14,7 +14,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name="StudentOnboarding",
             fields=[
-                ("id", models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name="ID")),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
                 ("student_id", models.CharField(max_length=64, unique=True)),
                 ("student_name", models.CharField(max_length=100)),
                 ("age", models.PositiveSmallIntegerField()),
@@ -27,5 +35,3 @@ class Migration(migrations.Migration):
             options={"ordering": ["-created_at"]},
         ),
     ]
-
-

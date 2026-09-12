@@ -1,4 +1,4 @@
-﻿# Author: NIRAJ KR YADAV
+# Author: NIRAJ KR YADAV
 # Email: Nirajyadav9466@gmail.com
 # Phone: 7366913096
 
@@ -8,6 +8,7 @@ MIN_AGE = 3
 MAX_AGE = 25
 MIN_NAME_LENGTH = 1
 MAX_NAME_LENGTH = 100
+
 
 def validate_student_name(value):
     value = value.strip()
@@ -19,6 +20,7 @@ def validate_student_name(value):
         )
     return value
 
+
 def validate_age(value):
     if not MIN_AGE <= value <= MAX_AGE:
         raise serializers.ValidationError(
@@ -26,9 +28,8 @@ def validate_age(value):
         )
     return value
 
+
 def validate_strict_boolean(value):
     if type(value) is not bool:
         raise serializers.ValidationError("Value must be a Boolean.")
     return value
-
-
